@@ -1,0 +1,34 @@
+#Julian Pena
+# Source https://dev.to/zeyu2001/network-scanning-with-scapy-in-python-3off
+
+#phyton3
+from scapy.all import *
+import socket
+
+def tcp_scan(ip, ports):
+    try:
+        syn = IP(dst=ip) / TCP(dport=ports, flags="S")
+    except socket.gaierror:
+        raise ValueError('Hostname {} could not be resolved.'.format(ip))
+
+    ans, unans = sr(syn, timeout=2, retry=1)
+    result = []
+
+    for sent, received in ans:
+        if received.haslayer(TCP):
+            if received[TCP].flags == "SA":
+                result.append(received[TCP].sport)
+                print(f"Port {received[TCP].sport} is open")
+            elif received[TCP].flags == "RA":
+                print(f"Port {received[TCP].sport} is closed")
+            else:
+                print(f"Port {received[TCP].sport} is filtered and silently dropped")
+        else:
+            print(f"No response received for port {sent[TCP].dport}")
+
+    return result
+
+host = "127.0.0.1"
+port_range = range(1, 101)  
+
+tcp_scan(host, port_range)
