@@ -1,0 +1,66 @@
+#Julian Pena
+# Source https://dev.to/zeyu2001/network-scanning-with-scapy-in-python-3off
+# I also had to utilize ChatGBT to rectify certain inaccuracies in the information.
+
+#phyton3
+from scapy.all import *
+import socket
+import ipaddress
+
+def tcp_scan(ip, ports):
+    try:
+        syn = IP(dst=ip) / TCP(dport=ports, flags="S")
+    except socket.gaierror:
+        raise ValueError('Hostname {} could not be resolved.'.format(ip))
+
+    ans, unans = sr(syn, timeout=2, retry=1)
+    result = []
+
+    for sent, received in ans:
+        if received.haslayer(TCP):
+            if received[TCP].flags == "SA":
+                result.append(received[TCP].sport)
+                print(f"Port {received[TCP].sport} is open")
+            elif received[TCP].flags == "RA":
+                print(f"Port {received[TCP].sport} is closed")
+            else:
+                print(f"Port {received[TCP].sport} is filtered and silently dropped")
+        else:
+            print(f"No response received for port {sent[TCP].dport}")
+
+    return result
+
+def icmp_ping_sweep(network):
+    live_hosts = []
+    cidr = ipaddress.ip_network(network)
+    for ip in cidr.hosts():
+        icmp = IP(dst=str(ip)) / ICMP()
+        resp = sr1(icmp, timeout=2, verbose=False)
+        if resp is None:
+            print(f"Host {ip} is down or unresponsive.")
+        elif resp.haslayer(ICMP) and resp[ICMP].type == 3 and resp[ICMP].code in [1, 2, 3, 9, 10, 13]:
+            print(f"Host {ip} is actively blocking ICMP traffic.")
+        else:
+            print(f"Host {ip} is responding.")
+            live_hosts.append(ip)
+    print(f"Number of hosts online: {len(live_hosts)}")
+    return live_hosts
+
+def main():
+    print("Network Security Tool")
+    print("1. TCP Port Range Scanner mode")
+    print("2. ICMP Ping Sweep mode")
+    choice = input("Enter your choice: ")
+
+    if choice == "1":
+        host = input("Enter the target IP address: ")
+        port_range = range(1, 101)  # Adjust the port range as needed
+        tcp_scan(host, port_range)
+    elif choice == "2":
+        network = input("Enter the network address with CIDR block (e.g., 10.10.0.0/24): ")
+        icmp_ping_sweep(network)
+    else:
+        print("Invalid choice. Please enter either '1' or '2'.")
+
+if __name__ == "__main__":
+    main()
