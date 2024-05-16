@@ -1,0 +1,61 @@
+#Julian Pena
+# Julian Pena
+# Source https://dev.to/zeyu2001/network-scanning-with-scapy-in-python-3off
+# paython3 
+# I nearly completed the task, but there were a few errors that I was unaware of and unable to resolve on my own. As a result, I sought assistance in correcting the mistakes I was encountering.
+
+
+from scapy.all import *
+import socket
+
+def tcp_scan(ip, ports):
+    try:
+        syn = IP(dst=ip) / TCP(dport=ports, flags="S")
+    except socket.gaierror:
+        raise ValueError('Hostname {} could not be resolved.'.format(ip))
+
+    ans, unans = sr(syn, timeout=2, retry=1)
+    result = []
+
+    for sent, received in ans:
+        if received.haslayer(TCP):
+            if received[TCP].flags == "SA":
+                result.append(received[TCP].sport)
+                print(f"Port {received[TCP].sport} is open")
+            elif received[TCP].flags == "RA":
+                print(f"Port {received[TCP].sport} is closed")
+            else:
+                print(f"Port {received[TCP].sport} is filtered and silently dropped")
+        else:
+            print(f"No response received for port {sent[TCP].dport}")
+
+    return result
+
+def icmp_ping(ip):
+    try:
+        ping = IP(dst=ip) / ICMP()
+    except socket.gaierror:
+        raise ValueError('Hostname {} could not be resolved.'.format(ip))
+
+    reply = sr1(ping, timeout=2, verbose=False)
+    if reply:
+        print(f"Host {ip} is up")
+        return True
+    else:
+        print(f"Host {ip} is down")
+        return False
+
+def main():
+    ip = input("Enter the target IP address: ")
+    port_range = range(1, 255)  
+
+    if icmp_ping(ip):
+        print(f"\nScanning ports for {ip}...\n")
+        open_ports = tcp_scan(ip, port_range)
+        if open_ports:
+            print("\nOpen ports:", open_ports)
+        else:
+            print("\nNo open ports found.")
+
+if __name__ == "__main__":
+    main()
