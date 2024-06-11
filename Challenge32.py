@@ -1,5 +1,10 @@
-
-
+#julian Pena
+#https://www.analyticsvidhya.com/blog/2024/01/ways-to-convert-python-scripts-to-exe-files/
+#https://hackerbase.pro/blog/1950
+#second part sources
+#https://www.geeksforgeeks.org/md5-hash-python/
+#https://www.youtube.com/watch?v=CGvZLlaEvAE
+#https://stackoverflow.com/questions/68454119/generate-md5-hash-of-file-and-compare-to-md5-hash-value-from-import-txt-file
 import os
 import hashlib
 from datetime import datetime
